@@ -26,8 +26,7 @@ struct Document {
 } Document;
 
 void
-eprint(const char *errstr, ...)
-{
+eprint(const char *errstr, ...) {
 	va_list ap;
 
 	va_start(ap, errstr);
@@ -36,16 +35,13 @@ eprint(const char *errstr, ...)
 	exit(EXIT_FAILURE);
 }
 
-void djvu_msg_handle(gboolean wait)
-{
+void djvu_msg_handle(gboolean wait) {
 	const ddjvu_message_t *msg;
 
 	if (wait)
 		ddjvu_message_wait(Document.ctx);
-	while ((msg = ddjvu_message_peek(Document.ctx)))
-	{
-		switch(msg->m_any.tag)
-		{ 
+	while ((msg = ddjvu_message_peek(Document.ctx))) {
+		switch(msg->m_any.tag) { 
 			case DDJVU_ERROR:
 				fprintf(stderr,"Error while decoding document\n");
 				break;
