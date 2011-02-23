@@ -3,8 +3,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <gtk/gtk.h>
+#include <gdk/gdkkeysyms.h>
 #include <libdjvu/miniexp.h>
 #include <libdjvu/ddjvuapi.h>
+
+enum { PagePrev, PageCur, PageNext };
 
 typedef struct {
 	GdkPixbuf *pixbuf;
@@ -18,11 +21,13 @@ struct UI {
 } UI;
 
 struct Document {
-	char *filename;
 	ddjvu_context_t *ctx;
 	ddjvu_document_t *doc;
 	ddjvu_format_t *fmt;
-	Page *pages;
+	char *filename;
+	int curpage;
+	int npages;
+	Page *pages[3];
 } Document;
 
 void
@@ -45,9 +50,12 @@ void djvu_msg_handle(gboolean wait) {
 			case DDJVU_ERROR:
 				fprintf(stderr,"Error while decoding document\n");
 				break;
-//			case DDJVU_INFO:       .... ; break;
-//			case DDJVU_NEWSTREAM:  .... ; break;
-//					       ....
+#if 0
+			case DDJVU_INFO:
+			 	break;
+			case DDJVU_NEWSTREAM:  .... ; break;
+					       ....
+#endif
 			default: break;
 		}
 		ddjvu_message_pop(Document.ctx);
@@ -102,7 +110,7 @@ djvu_page_render (int num, int rot) {
 	prect.w = page_width;
 	prect.h = page_height;
 	rrect = prect;
-	rowsize = rrect.w*3;
+	rowsize = rrect.w*3; /* 24bpp */
 
 	if(!(page->pixels = malloc(rowsize * rrect.h)))
 		eprint("ENOMEM");
@@ -130,14 +138,32 @@ void opendjvu(char *filename) {
 		eprint("cannot open djvu document\n", Document.filename);
 	if(!(Document.fmt = ddjvu_format_create(DDJVU_FORMAT_RGB24, 0, 0)))
 		eprint("cannot set format\n");
+	while (!ddjvu_document_decoding_done(Document.doc))
+		djvu_msg_handle(TRUE);
+	if(!(Document.npages = ddjvu_document_get_pagenum(Document.doc)))
+		eprint("cannot get number of pages\n");
+	Document.curpage = 0;
 	ddjvu_format_set_row_order(Document.fmt, 1);
 }
 
-void show() {
+void page(int n) {
 	Page *page;
-
-	page = djvu_page_render(0, 0);
+	if(n < 0) 
+		n = 0;
+	if(n >= Document.npages)
+		n = Document.npages - 1 ;
+	page = djvu_page_render(n, 0);
 	gtk_image_set_from_pixbuf(GTK_IMAGE(UI.docarea), page->pixbuf); 
+	Document.curpage = n;
+}
+
+gboolean
+keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
+	if(event->keyval == GDK_j || event->keyval == GDK_Page_Down)
+		page(Document.curpage+1);
+	if(event->keyval == GDK_k || event->keyval == GDK_Page_Up)
+		page(Document.curpage-1);
+	return TRUE;
 }
 
 int main(int argc, char *argv[]) {
@@ -154,10 +180,11 @@ int main(int argc, char *argv[]) {
 	UI.docarea = gtk_image_new();
 	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(UI.scrwin), UI.docarea);
 	gtk_container_add(GTK_CONTAINER(UI.window), UI.scrwin);
-	g_signal_connect (G_OBJECT (UI.window), "destroy",
+	g_signal_connect (G_OBJECT(UI.window), "destroy",
 			G_CALLBACK (gtk_main_quit), NULL);
+	g_signal_connect(G_OBJECT(UI.window), "key-press-event", G_CALLBACK(keypress), NULL);
 	gtk_widget_show_all(UI.window);
-	show();
+	page(0);
 	gtk_main();
 	return 0;
 }
