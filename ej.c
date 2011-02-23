@@ -169,6 +169,8 @@ keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 		page(Document.curpage+1);
 	if(event->keyval == GDK_k || event->keyval == GDK_Page_Up)
 		page(Document.curpage-1);
+	if(event->keyval == GDK_q)
+		gtk_main_quit ();
 	return TRUE;
 }
 
