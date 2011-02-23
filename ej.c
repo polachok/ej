@@ -6,6 +6,11 @@
 #include <libdjvu/miniexp.h>
 #include <libdjvu/ddjvuapi.h>
 
+typedef struct {
+	GdkPixbuf *pixbuf;
+	gchar *pixels;
+} Page;
+
 struct UI {
 	GtkWidget *window;
 	GtkWidget *docarea;
@@ -17,6 +22,7 @@ struct Document {
 	ddjvu_context_t *ctx;
 	ddjvu_document_t *doc;
 	ddjvu_format_t *fmt;
+	Page *pages;
 } Document;
 
 void
@@ -52,10 +58,9 @@ void djvu_msg_handle(gboolean wait)
 	}
 }
 
-GdkPixbuf *
-djvu_page_render (int page, int rot) {
-	GdkPixbuf *pixbuf;
-	gchar *pixels;
+Page *
+djvu_page_render (int num, int rot) {
+	Page *page;
     	ddjvu_rect_t rrect;
 	ddjvu_rect_t prect;
 	ddjvu_page_t *d_page;
@@ -63,10 +68,12 @@ djvu_page_render (int page, int rot) {
 	int rowsize;
 	double page_width, page_height, tmp;
 
-	d_page = ddjvu_page_create_by_pageno (Document.doc, page);
+	d_page = ddjvu_page_create_by_pageno (Document.doc, num);
 	
 	while (!ddjvu_page_decoding_done (d_page))
 		djvu_msg_handle(TRUE);
+
+	page = malloc(sizeof(Page));
 
 	page_width = ddjvu_page_get_width (d_page);
 	page_height = ddjvu_page_get_height (d_page);
@@ -101,7 +108,7 @@ djvu_page_render (int page, int rot) {
 	rrect = prect;
 	rowsize = rrect.w*3;
 
-	if(!(pixels = malloc(rowsize * rrect.h)))
+	if(!(page->pixels = malloc(rowsize * rrect.h)))
 		eprint("ENOMEM");
 
 	ddjvu_page_set_rotation (d_page, rotation);
@@ -111,10 +118,11 @@ djvu_page_render (int page, int rot) {
 			   &rrect,
 			   Document.fmt,
 			   rowsize,
-			   pixels);
+			   page->pixels);
 
-	pixbuf = gdk_pixbuf_new_from_data(pixels, GDK_COLORSPACE_RGB, FALSE, 8, rrect.w, rrect.h, rrect.w*3, NULL, NULL);
-	return pixbuf;
+	page->pixbuf = gdk_pixbuf_new_from_data(page->pixels, GDK_COLORSPACE_RGB,
+		       	FALSE, 8, rrect.w, rrect.h, rrect.w*3, NULL, NULL);
+	return page;
 }
 
 void opendjvu(char *filename) {
@@ -130,10 +138,10 @@ void opendjvu(char *filename) {
 }
 
 void show() {
-	GdkPixbuf *pixbuf;
+	Page *page;
 
-	pixbuf = djvu_page_render(0, 0);
-	gtk_image_set_from_pixbuf(GTK_IMAGE(UI.docarea), pixbuf); 
+	page = djvu_page_render(0, 0);
+	gtk_image_set_from_pixbuf(GTK_IMAGE(UI.docarea), page->pixbuf); 
 }
 
 int main(int argc, char *argv[]) {
