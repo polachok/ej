@@ -18,6 +18,7 @@ struct UI {
 	GtkWidget *window;
 	GtkWidget *docarea;
 	GtkWidget *scrwin;
+	float scale;
 } UI;
 
 struct Document {
@@ -63,7 +64,7 @@ void djvu_msg_handle(gboolean wait) {
 }
 
 Page *
-djvu_page_render (int num, int rot) {
+djvu_page_render (int num, int rot, float scale) {
 	Page *page;
     	ddjvu_rect_t rrect;
 	ddjvu_rect_t prect;
@@ -107,8 +108,8 @@ djvu_page_render (int num, int rot) {
 
 	prect.x = 0;
 	prect.y = 0;
-	prect.w = page_width;
-	prect.h = page_height;
+	prect.w = page_width * scale;
+	prect.h = page_height * scale;
 	rrect = prect;
 	rowsize = rrect.w*3; /* 24bpp */
 
@@ -142,17 +143,17 @@ void opendjvu(char *filename) {
 		djvu_msg_handle(TRUE);
 	if(!(Document.npages = ddjvu_document_get_pagenum(Document.doc)))
 		eprint("cannot get number of pages\n");
-	Document.curpage = 0;
 	ddjvu_format_set_row_order(Document.fmt, 1);
+	Document.curpage = 0;
 }
 
-void page(int n) {
+void page(int n, float scale) {
 	Page *page;
 	if(n < 0) 
 		n = 0;
 	if(n >= Document.npages)
-		n = Document.npages - 1 ;
-	page = djvu_page_render(n, 0);
+		n = Document.npages - 1;
+	page = djvu_page_render(n, 0, scale);
 	gtk_image_set_from_pixbuf(GTK_IMAGE(UI.docarea), page->pixbuf); 
 	if (Document.pages[PageCur]) {
 		g_object_unref(Document.pages[PageCur]->pixbuf);
@@ -161,14 +162,19 @@ void page(int n) {
 	}
 	Document.pages[PageCur] = page;
 	Document.curpage = n;
+	UI.scale = scale;
 }
 
 gboolean
 keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 	if(event->keyval == GDK_j || event->keyval == GDK_Page_Down)
-		page(Document.curpage+1);
+		page(Document.curpage+1, 1);
 	if(event->keyval == GDK_k || event->keyval == GDK_Page_Up)
-		page(Document.curpage-1);
+		page(Document.curpage-1, 1);
+	if(event->keyval == GDK_minus)
+		page(Document.curpage, UI.scale-0.1);
+	if(event->keyval == GDK_equal || event->keyval == GDK_plus)
+		page(Document.curpage, UI.scale+0.1);
 	if(event->keyval == GDK_q)
 		gtk_main_quit ();
 	return TRUE;
@@ -192,7 +198,7 @@ int main(int argc, char *argv[]) {
 			G_CALLBACK (gtk_main_quit), NULL);
 	g_signal_connect(G_OBJECT(UI.window), "key-press-event", G_CALLBACK(keypress), NULL);
 	gtk_widget_show_all(UI.window);
-	page(0);
+	page(0, 1);
 	gtk_main();
 	return 0;
 }
