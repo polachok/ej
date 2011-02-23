@@ -154,6 +154,12 @@ void page(int n) {
 		n = Document.npages - 1 ;
 	page = djvu_page_render(n, 0);
 	gtk_image_set_from_pixbuf(GTK_IMAGE(UI.docarea), page->pixbuf); 
+	if (Document.pages[PageCur]) {
+		g_object_unref(Document.pages[PageCur]->pixbuf);
+		free(Document.pages[PageCur]->pixels);
+		free(Document.pages[PageCur]);
+	}
+	Document.pages[PageCur] = page;
 	Document.curpage = n;
 }
 
