@@ -183,7 +183,10 @@ keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 int main(int argc, char *argv[]) {
 	gtk_init(&argc, &argv);
 	if (argc == 2)
-		opendjvu(argv[1]);
+		if(!strcmp(argv[1], "-v"))
+			eprint("ej-" VERSION "\n");
+		else
+			opendjvu(argv[1]);
 	else 
 		eprint("usage: ej [file]\n");
 
