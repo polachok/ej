@@ -1,0 +1,36 @@
+.Dd $Mdocdate$
+.Dt EJ 1
+.Os
+.Sh NAME
+.Nm ej
+.Nd a lightweight DejaVu viewer for X
+.Sh SYNOPSIS
+.Nm ej
+.Bk -words
+.Op Fl v
+.Op Ar file
+.Ek
+.Sh DESCRIPTION
+.Nm
+is a lightweight DejaVu viewer for X using gtk.
+.Pp
+The options are as follows:
+.Bl -tag -width "XXXXXXXXXXXX"
+.It Fl v
+Prints version information to standard output, then exits.
+.It Ar file
+Specifies a file to view.
+.Pp
+.Sh KEY BINDINGS
+Key bindings are:
+.Pp
+.Bl -tag -width "XXXXXXXXXXXX" -offset indent -compact
+.It Ic j PgDown
+Next page.
+.It Ic k PgUp
+Previous page.
+.It Ic = +
+Zoom in.
+.It Ic -
+Zoom out.
+.El
