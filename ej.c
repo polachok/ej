@@ -168,9 +168,9 @@ void page(int n, float scale) {
 gboolean
 keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 	if(event->keyval == GDK_j || event->keyval == GDK_Page_Down)
-		page(Document.curpage+1, 1);
+		page(Document.curpage+1, UI.scale);
 	if(event->keyval == GDK_k || event->keyval == GDK_Page_Up)
-		page(Document.curpage-1, 1);
+		page(Document.curpage-1, UI.scale);
 	if(event->keyval == GDK_minus)
 		page(Document.curpage, UI.scale-0.1);
 	if(event->keyval == GDK_equal || event->keyval == GDK_plus)
