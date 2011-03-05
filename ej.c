@@ -202,32 +202,24 @@ keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 		return FALSE;
 	}
 	if(widget == UI.scrwin) {
-		if(event->keyval == GDK_Up)
-		{
+		if(event->keyval == GDK_Up) {
 			vajustment = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(UI.scrwin));
-			if(vajustment->value == (vajustment->lower))
-			{
+			if(vajustment->value == (vajustment->lower)) {
 				if(page(Document.curpage-1, UI.scale))
 					g_signal_emit_by_name(UI.scrwin, "scroll-child",
 							GTK_SCROLL_END, FALSE, &dummy);
-			}
-			else
-			{
+			} else {
 				g_signal_emit_by_name(UI.scrwin, "scroll-child",
 						GTK_SCROLL_STEP_BACKWARD, FALSE, &dummy);
 			}
 		}
-		else if(event->keyval == GDK_Down)
-		{
+		else if(event->keyval == GDK_Down) {
 			vajustment = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(UI.scrwin));
-			if(vajustment->value == (vajustment->upper - vajustment->page_size))
-			{
+			if(vajustment->value == (vajustment->upper - vajustment->page_size)) {
 				if(page(Document.curpage+1, UI.scale))
 					g_signal_emit_by_name(UI.scrwin, "scroll-child",
 						GTK_SCROLL_START, FALSE, &dummy);
-			}
-			else
-			{
+			} else {
 				g_signal_emit_by_name(UI.scrwin, "scroll-child",
 						GTK_SCROLL_STEP_FORWARD, FALSE, &dummy);
 			}
