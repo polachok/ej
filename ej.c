@@ -21,6 +21,7 @@ struct UI {
 	GtkWidget *docarea;
 	GtkWidget *scrwin;
 	GtkWidget *label;
+	GtkWidget *status;
 	GtkWidget *pgentry;
 	float scale;
 } UI;
@@ -153,6 +154,8 @@ void opendjvu(char *filename) {
 
 void page(int n, float scale) {
 	Page *page;
+	char status[20];
+
 	if(n < 0) 
 		n = 0;
 	if(n >= Document.npages)
@@ -167,6 +170,11 @@ void page(int n, float scale) {
 	Document.pages[PageCur] = page;
 	Document.curpage = n;
 	UI.scale = scale;
+	snprintf(status, sizeof(status), "%d/%d %3.0f%%", Document.curpage+1,
+		       	Document.npages, 100*(Document.curpage+1)/(float)Document.npages);
+	gtk_label_set_text(GTK_LABEL(UI.status), status);
+	snprintf(status, sizeof(status), "%d", Document.curpage+1);
+	gtk_entry_set_text(GTK_ENTRY(UI.pgentry), status);
 }
 
 gboolean
@@ -228,8 +236,10 @@ int main(int argc, char *argv[]) {
 	UI.vbox = gtk_vbox_new(FALSE, 0);
 	UI.hbox = gtk_hbox_new(FALSE, 0);
 	UI.label = gtk_label_new(" Page: ");
+	UI.status = gtk_label_new("0/0 ");
 	UI.scrwin = gtk_scrolled_window_new(NULL, NULL);
 	UI.pgentry = gtk_entry_new();
+	gtk_misc_set_alignment(GTK_MISC(UI.status), 1, 0.5);
 	gtk_entry_set_text(GTK_ENTRY(UI.pgentry), "Goto page");
 	gtk_entry_set_editable(GTK_ENTRY(UI.pgentry), TRUE);
 	gtk_container_add(GTK_CONTAINER(UI.window), UI.vbox);
@@ -237,6 +247,7 @@ int main(int argc, char *argv[]) {
 	gtk_box_pack_end (GTK_BOX(UI.vbox), UI.hbox, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(UI.hbox), UI.label, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(UI.hbox), UI.pgentry, FALSE, FALSE, 0);
+	gtk_box_pack_end(GTK_BOX(UI.hbox), UI.status, TRUE, TRUE, 0);
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (UI.scrwin),
 			                                GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 	UI.docarea = gtk_image_new();
