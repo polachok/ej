@@ -1,6 +1,6 @@
 # ej
 
-VERSION = 0.1
+VERSION = 0.2
 LOCALBASE ?= /usr/local
 CFLAGS += -c -Wall -O2 -I${LOCALBASE}/include `pkg-config --cflags gtk+-2.0` -DVERSION=\"${VERSION}\"
 LDFLAGS += -L${LOCALBASE}/lib -ldjvulibre `pkg-config --libs gtk+-2.0` 
