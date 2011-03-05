@@ -149,10 +149,10 @@ void opendjvu(char *filename) {
 	if(!(Document.npages = ddjvu_document_get_pagenum(Document.doc)))
 		eprint("cannot get number of pages\n");
 	ddjvu_format_set_row_order(Document.fmt, 1);
-	Document.curpage = 0;
+	Document.curpage = -1;
 }
 
-void page(int n, float scale) {
+int page(int n, float scale) {
 	Page *page;
 	char status[20];
 
@@ -160,6 +160,8 @@ void page(int n, float scale) {
 		n = 0;
 	if(n >= Document.npages)
 		n = Document.npages - 1;
+	if((n == Document.curpage) && (scale == UI.scale))
+		return 0;	
 	page = djvu_page_render(n, 0, scale);
 	gtk_image_set_from_pixbuf(GTK_IMAGE(UI.docarea), page->pixbuf); 
 	if (Document.pages[PageCur]) {
@@ -175,6 +177,7 @@ void page(int n, float scale) {
 	gtk_label_set_text(GTK_LABEL(UI.status), status);
 	snprintf(status, sizeof(status), "%d", Document.curpage+1);
 	gtk_entry_set_text(GTK_ENTRY(UI.pgentry), status);
+	return 1;
 }
 
 gboolean
@@ -204,9 +207,9 @@ keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 			vajustment = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(UI.scrwin));
 			if(vajustment->value == (vajustment->lower))
 			{
-				page(Document.curpage-1, UI.scale);
-				g_signal_emit_by_name(UI.scrwin, "scroll-child",
-						GTK_SCROLL_END, FALSE, &dummy);
+				if(page(Document.curpage-1, UI.scale))
+					g_signal_emit_by_name(UI.scrwin, "scroll-child",
+							GTK_SCROLL_END, FALSE, &dummy);
 			}
 			else
 			{
@@ -219,8 +222,8 @@ keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 			vajustment = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(UI.scrwin));
 			if(vajustment->value == (vajustment->upper - vajustment->page_size))
 			{
-				page(Document.curpage+1, UI.scale);
-				g_signal_emit_by_name(UI.scrwin, "scroll-child",
+				if(page(Document.curpage+1, UI.scale))
+					g_signal_emit_by_name(UI.scrwin, "scroll-child",
 						GTK_SCROLL_START, FALSE, &dummy);
 			}
 			else
