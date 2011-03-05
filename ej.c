@@ -16,8 +16,10 @@ typedef struct {
 
 struct UI {
 	GtkWidget *window;
+	GtkWidget *vbox;
 	GtkWidget *docarea;
 	GtkWidget *scrwin;
+	GtkWidget *pgentry;
 	float scale;
 } UI;
 
@@ -167,17 +169,47 @@ void page(int n, float scale) {
 
 gboolean
 keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
-	if(event->keyval == GDK_j || event->keyval == GDK_Page_Down)
-		page(Document.curpage+1, UI.scale);
-	if(event->keyval == GDK_k || event->keyval == GDK_Page_Up)
-		page(Document.curpage-1, UI.scale);
-	if(event->keyval == GDK_minus)
-		page(Document.curpage, UI.scale-0.1);
-	if(event->keyval == GDK_equal || event->keyval == GDK_plus)
-		page(Document.curpage, UI.scale+0.1);
-	if(event->keyval == GDK_q)
-		gtk_main_quit ();
-	return TRUE;
+	int n;
+	
+	if(widget == UI.pgentry) {
+		if(event->keyval == GDK_Return) {
+			n = atoi(gtk_entry_get_text(GTK_ENTRY(widget)));
+			page(n, UI.scale);
+			gtk_widget_grab_focus(UI.scrwin);
+			gtk_widget_hide(UI.pgentry);
+			return TRUE;
+		}
+		if(event->keyval == GDK_Escape) {
+			gtk_widget_grab_focus(UI.scrwin);
+			gtk_widget_hide(UI.pgentry);
+			return TRUE;
+		}
+		return FALSE;
+	}
+	if(widget == UI.scrwin) {
+		if(event->keyval == GDK_j || event->keyval == GDK_Page_Down)
+			page(Document.curpage+1, UI.scale);
+		else if(event->keyval == GDK_k || event->keyval == GDK_Page_Up)
+			page(Document.curpage-1, UI.scale);
+		else if(event->keyval == GDK_minus)
+			page(Document.curpage, UI.scale-0.1);
+		else if(event->keyval == GDK_equal || event->keyval == GDK_plus)
+			page(Document.curpage, UI.scale+0.1);
+		else if(event->keyval == GDK_q)
+			gtk_main_quit ();
+		else if(event->keyval == GDK_g) {
+			if(gtk_widget_get_visible(UI.pgentry)) {
+				gtk_widget_grab_focus(UI.scrwin);
+				gtk_widget_hide(UI.pgentry);
+			} else {
+				gtk_widget_show(UI.pgentry);
+				gtk_widget_grab_focus(UI.pgentry);
+			}
+		} else 
+			return FALSE;
+		return TRUE;
+	}
+	return FALSE;
 }
 
 int main(int argc, char *argv[]) {
@@ -191,16 +223,24 @@ int main(int argc, char *argv[]) {
 		eprint("usage: ej [file]\n");
 
 	UI.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	UI.vbox = gtk_vbox_new(FALSE, 0);
 	UI.scrwin = gtk_scrolled_window_new(NULL, NULL);
+	UI.pgentry = gtk_entry_new();
+	gtk_entry_set_text(GTK_ENTRY(UI.pgentry), "Goto page");
+	gtk_entry_set_editable(GTK_ENTRY(UI.pgentry), TRUE);
+	gtk_container_add(GTK_CONTAINER(UI.window), UI.vbox);
+	gtk_box_pack_start (GTK_BOX (UI.vbox), UI.scrwin, TRUE, TRUE, 0 );
+	gtk_box_pack_end (GTK_BOX(UI.vbox), UI.pgentry, FALSE, FALSE, 0 );
 	gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (UI.scrwin),
 			                                GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 	UI.docarea = gtk_image_new();
 	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(UI.scrwin), UI.docarea);
-	gtk_container_add(GTK_CONTAINER(UI.window), UI.scrwin);
 	g_signal_connect (G_OBJECT(UI.window), "destroy",
 			G_CALLBACK (gtk_main_quit), NULL);
-	g_signal_connect(G_OBJECT(UI.window), "key-press-event", G_CALLBACK(keypress), NULL);
+	g_signal_connect(G_OBJECT(UI.scrwin), "key-press-event", G_CALLBACK(keypress), NULL);
+	g_signal_connect(G_OBJECT(UI.pgentry), "key-press-event", G_CALLBACK(keypress), NULL);
 	gtk_widget_show_all(UI.window);
+	gtk_widget_hide(UI.pgentry);
 	page(0, 1);
 	gtk_main();
 	return 0;
