@@ -204,6 +204,12 @@ keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 		else if(event->keyval == GDK_Down)
 			g_signal_emit_by_name(UI.scrwin, "scroll-child",
 				      	GTK_SCROLL_STEP_FORWARD, FALSE, &dummy);
+		else if(event->keyval == GDK_Left)
+			g_signal_emit_by_name(UI.scrwin, "scroll-child",
+				      	GTK_SCROLL_STEP_BACKWARD, TRUE, &dummy);
+		else if(event->keyval == GDK_Right)
+			g_signal_emit_by_name(UI.scrwin, "scroll-child",
+				      	GTK_SCROLL_STEP_FORWARD, TRUE, &dummy);
 		else if(event->keyval == GDK_j || event->keyval == GDK_Page_Down)
 			page(Document.curpage+1, UI.scale);
 		else if(event->keyval == GDK_k || event->keyval == GDK_Page_Up)
