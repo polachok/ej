@@ -180,6 +180,7 @@ void page(int n, float scale) {
 gboolean
 keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 	int n;
+	gboolean dummy;
 	
 	if(widget == UI.pgentry) {
 		if(event->keyval == GDK_Return) {
@@ -199,10 +200,10 @@ keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 	if(widget == UI.scrwin) {
 		if(event->keyval == GDK_Up)
 			g_signal_emit_by_name(UI.scrwin, "scroll-child",
-				      	GTK_SCROLL_STEP_BACKWARD, NULL);
+				      	GTK_SCROLL_STEP_BACKWARD, FALSE, &dummy);
 		else if(event->keyval == GDK_Down)
 			g_signal_emit_by_name(UI.scrwin, "scroll-child",
-				      	GTK_SCROLL_STEP_FORWARD, NULL);
+				      	GTK_SCROLL_STEP_FORWARD, FALSE, &dummy);
 		else if(event->keyval == GDK_j || event->keyval == GDK_Page_Down)
 			page(Document.curpage+1, UI.scale);
 		else if(event->keyval == GDK_k || event->keyval == GDK_Page_Up)
