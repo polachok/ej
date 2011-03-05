@@ -197,7 +197,13 @@ keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 		return FALSE;
 	}
 	if(widget == UI.scrwin) {
-		if(event->keyval == GDK_j || event->keyval == GDK_Page_Down)
+		if(event->keyval == GDK_Up)
+			g_signal_emit_by_name(UI.scrwin, "scroll-child",
+				      	GTK_SCROLL_STEP_BACKWARD, NULL);
+		else if(event->keyval == GDK_Down)
+			g_signal_emit_by_name(UI.scrwin, "scroll-child",
+				      	GTK_SCROLL_STEP_FORWARD, NULL);
+		else if(event->keyval == GDK_j || event->keyval == GDK_Page_Down)
 			page(Document.curpage+1, UI.scale);
 		else if(event->keyval == GDK_k || event->keyval == GDK_Page_Up)
 			page(Document.curpage-1, UI.scale);
